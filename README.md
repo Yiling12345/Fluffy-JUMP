@@ -16,10 +16,18 @@ Play directly in your browser:
 - Avoid fireballs to keep playing
 - Score increases over time
 
-## 🛠️ Technical Implementation
-- Pure JavaScript using [p5.js](https://p5js.org/)
-https://editor.p5js.org/Joy_yiling_zhong/sketches/GwOavhZmd
-- No external dependencies
+## ⚙️ Technical Features
+- **p5.js** for rendering
+- **Bezier-inspired jump physics** (quadratic curve)
+- Mobile-responsive design
+- Zero dependencies
+
+```javascript
+// Example jump calculation (simplified)
+function jump() {
+  // Uses quadratic bezier for smooth arc
+  let y = bezierPoint(startY, peakY, endY, t);
+}
 
 ## 📥 Local Installation
 # Just open index.html or link in any browser!
