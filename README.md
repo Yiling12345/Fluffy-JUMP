@@ -1,4 +1,4 @@
-# Flaffy Jump
+# Fluffy Jump
 
 A classic jumping game built with p5.js. Guide a character through obstacles with simple one-tap controls.
 
@@ -17,10 +17,8 @@ Play directly in your browser:
 
 ## 🛠️ Technical Implementation
 - Pure JavaScript using [p5.js](https://p5js.org/)
+https://editor.p5js.org/Joy_yiling_zhong/sketches/GwOavhZmd
 - No external dependencies
 
 ## 📥 Local Installation
-```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
 # Just open index.html or link in any browser!
