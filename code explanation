@@ -1,0 +1,426 @@
+// Reference: https://p5js.org/zh-Hans/reference/p5/frameCount/
+  //https://p5js.org/reference/p5/bezierPoint/
+//https://p5js.org/zh-Hans/reference/p5/millis/
+
+
+/********* Initial variables for the character, fireballs, and game states ******/
+let MouX = 1;// Size of the character's mouth
+let EyeX = 6;// Size of the character's eyes
+let fireBallsArray = []; // Array to store fireballs objects
+let gameState = "start"; // Possible values: "start", "playing", "gameOver"
+
+/** The control point of the jump path **/
+let startX = 150, startY = 250;  // start point
+let endX = 300, endY = 250;      // terminal
+let controlX1 = 200, controlY1 = 100;  // control point1
+let controlX2 = 250, controlY2 = 100;  // control point2
+
+/** Control the speed of the jump using t (time parameter) **/
+let t = 0; // This controls the jump's progress
+let isJumping = false; // Boolean flag for the character's jumping state
+
+/** Background images and related variables **/
+let bgOptions; // Variable to hold radio button options for the background
+let bgImage;  // The current background image
+let bgX = 0;  // Background's horizontal movement position
+
+/** Sound files **/
+let jumpSound; // jump sound
+let bgMusic; // bgm 
+let clSound; // the sound when fluffy tounch the fireballs
+
+/** Score and other game-related variables **/
+let score = 0; // initialize the score of the game 
+let lastScoreTime = 0;  // Store the time of the last score
+
+
+
+/** Variables to manage fireball dodging and score timing **/
+let dodgedFireball = false; // Declare it globally, so it can be accessed throughout the game
+let lastDodgeTime = 0; // Initialize lastDodgeTime as 0 at the beginning
+
+/******* Preload assets (images and sounds) *******/
+function preload() {
+  startImage = loadImage("start.png");// start image
+  gameOverImage = loadImage("GAME OVER.png");// game over image
+  successImage = loadImage ("Success.png");// success image
+
+  interstellarImage = loadImage('interstella.jpg');
+  // background image of interstellar
+  forestImage = loadImage('forest.jpg');
+  // background image of forest
+  volcanoImage = loadImage('volcano.jpg');
+  // background image of volcano
+  
+  jumpSound = loadSound('jump.mp3'); // jump sound
+  bgMusic = loadSound('bgm.mp3'); // bgm
+  clSound = loadSound('collision.mp3'); // collision sound
+}
+
+
+/** Setup function - runs once at the start of the program, it includes canvas, bgm, radio button and background images**/
+function setup() {
+  
+  createCanvas(600, 300); // Set the size of the canvas
+
+  
+  bgMusic.loop(); // start the bgm constantly
+  jumpSound.setLoop(false);// avoid jump sound conflict and ensure jump sound does not loop
+  clSound.setLoop(false);// avoid collision sound conflict and ensure collision sound does not loop
+   bgMusic.setVolume(0.5); // Optionally, set the volume of the background music to avoid loudness
+
+  
+  /*****create fireballs and store them in an array *********/
+for (let i = 0; i < 2; i++) {
+  let x = width; // set the x of fireballs
+  let y = random(300,200); // set the y of fireballs
+  let speed = -5 - i; // set the seed of fireballs
+  let fireBalls = createFireBalls(x, y, speed);//create fireballs
+  fireBallsArray.push(fireBalls);//Add the fireballs to the array
+}
+
+
+/***** creating radio button for changing the background *******/
+  bgOptions = createRadio(); // create a radio button
+  bgOptions.option('Interstellar', 'Interstellar');
+  bgOptions.option('forest', 'forest');
+  bgOptions.option('Volcano', 'Volcano');
+  bgOptions.selected('Interstellar'); 
+  // set the original background
+  bgOptions.position(10, height + 10);  
+ // set the position of button
+
+  bgOptions.mouseClicked(setBackground);
+  // the background image will be changed when click the button
+
+  setBackground(); // set the original image
+}
+
+
+/********create the character by x and y*******/
+function drawCharacter(x, y) {
+  fill("white"); // fill white color
+  stroke(0); // black stroke
+  strokeWeight(2); // stroke weight
+
+  
+  // Start drawing the shape.
+  beginShape();
+  
+  //start point
+  vertex(x - 20.5, y - 10);
+  // draw left ear
+  bezierVertex(x - 13, y - 30, x - 7, y - 14, x - 7, y - 14);
+
+  //start point
+  vertex(x - 7, y - 14);
+  // draw the brain
+  bezierVertex(x + 1.5, y - 17, x + 7, y - 14, x + 7, y - 14);
+  
+  //start point
+  vertex(x+7, y-14);
+  // draw right ear
+  bezierVertex (x+15.5, y-30, x+19.5, y-10, x+19.5, y-10); 
+  
+  //start point
+  vertex(x+19.5, y-10);
+  // right face
+  bezierVertex(x+29.5, y+7.5, x+14.5, y+12.5, x+14.5, y+ 12.5);
+
+  //start point
+  vertex(x+14.5, y+12.5);
+  // right hand
+  bezierVertex(x+29.5, y+22.5, x+14.5, y+20, x+14.5, y +20);
+
+   //start point
+  vertex(x+14.5, y+20);
+  // right body
+  bezierVertex(x+14.5, y+27.5, x+9.5, y+37.5, x+4, y+30);
+
+  // start point
+  vertex(x+4, y+30);
+  // smooth bottom curve
+  bezierVertex(x+4, y+30, x-0.5, y+32.5, x-6, y+30);
+  
+ //start point
+  vertex(x-6, y+30);
+  // left body
+  bezierVertex(x-10.5 ,y+37.5 ,x-15.5, y+27.5, x-15.5, y+20);
+
+   //start point
+  vertex(x-15.5, y+20);
+  // left hand
+  bezierVertex(x-15.5, y+20, x -30.5, y+22.5,x-15.5, y+12.5);
+
+  //start point
+  vertex(x-15.5, y+12.5);  
+  // left face
+  bezierVertex(x-15.5, y+12.5, x-30.5, y+7.5, x-20.5, y-10);
+
+  endShape();
+
+  // inner ear
+  fill("pink");
+  noStroke();
+  triangle(x-15.5, y-10, x-12.5, y-15.5, x-8.5, y-12);
+  triangle(x+11, y-12, x+14, y-17, x+17, y-12);
+  
+  // draw eyes
+  fill("black");
+  ellipse(x-7, y-4, 3, EyeX);  // left eye
+  ellipse(x+7, y-4, 3, EyeX);  // right eye
+  
+  strokeWeight(25); // stroke width 
+  ellipse(x, y+3.5, 2.5, MouX);  // mouth
+}
+
+
+
+/******* changing background base on the button ******/
+function setBackground() {
+  let selectedOption = bgOptions.value(); // get the option
+
+  // different images match different button
+  if (selectedOption === 'Interstellar') {
+    bgImage = loadImage('interstella.jpg');  
+    // background1
+  } else if (selectedOption === 'forest') {
+    bgImage = loadImage('forest.jpg');  
+    // background2
+  } else if (selectedOption === 'Volcano') {
+    bgImage = loadImage('volcano.jpg');  
+    // background3
+  }
+}
+
+
+/*** check whether the character touch the fireballs ***/
+function checkCollision() {
+  dodgedFireball = false; // Reset dodgedFireball each time we check collisions
+
+
+  // Loop through all fireballs to check for collision
+  for (let i = 0; i < fireBallsArray.length; i++) {
+    let fireBall = fireBallsArray[i];
+    let characterX = bezierPoint(startX, controlX1, controlX2, endX, t); // Character's x position
+    let characterY = bezierPoint(startY, controlY1, controlY2, endY, t); // Character's y position
+    let fireBallRadius = fireBall.size / 2;  // Fireball's radius
+    let fireBallX = fireBall.x; // Fireball's x position
+    let fireBallY = fireBall.y; // Fireball's y position
+    let distance = dist(characterX, characterY, fireBallX, fireBallY); // Calculating the distance between fire ball and character
+
+  
+    if (distance < fireBallRadius) {
+      gameState = "gameOver"; // setting the game state is game over when they collide
+  
+    if (gameState === "gameOver" &&!clSound.isPlaying()){
+     clSound.play(); // play the game over sound
+       }
+    } else {
+       // Fireball is dodged successfully, mark as dodged
+      dodgedFireball = true;
+    }
+  }
+
+  // If no collision happened, we assume the fireball was dodged
+  let currentTime = millis(); // Get current time in milliseconds
+
+   // Only add score if at least 2 seconds have passed since the last score
+  if (dodgedFireball && currentTime - lastScoreTime > 2000) {  
+   // 2000 ms = 2 seconds
+    score += 10;  
+    // Add 10 points for successfully dodging a fireball
+    lastScoreTime = currentTime;  
+    // Update the time of the last score
+  }
+}
+
+
+/* Function to create initial fireballs for reseting the game */
+function createInitialFireballs() {
+  for (let i = 0; i < 2; i++) {
+    let x = width; // set the x of fireballs
+    let y = random(300, 200); // set the y of fireballs
+    let speed = -5 - i; // set the speed of fireballs
+    let fireBalls = createFireBalls(x, y, speed); // create fireball
+    fireBallsArray.push(fireBalls); // Add fireball to array
+  }
+}
+
+
+/****** Function to reset game ******/
+function resetGame() {
+  // Reset core game state
+  gameState = "start";  // Set game to start state
+  score = 0;  // Reset score
+  fireBallsArray = [];  // Clear current fireballs
+  createInitialFireballs();  // Create new initial fireballs
+
+  // Reset character and jumping state
+  MouX = 1; //reset the mouse x of character
+  EyeX = 6; //reset the eye x of character
+  isJumping = false; //reset jump state
+  t = 0;  // Reset jump animation progress
+  
+  lastFireballTime = 0;  // Reset fireball spawn time
+  bgX = 0;  // Reset background position
+
+}
+
+/** run the game continuously to update the game **/ 
+  function draw() {
+  background("white");
+
+/** set the game start image **/
+    if (gameState === "start") {
+    // If the game is in the "start" state, show the start screen
+    image(startImage, 0, 0, width, height); 
+    // Display the start image
+  }
+  
+/** set the background images and make it move **/
+ else if (gameState === "playing") { 
+  // draw the background 
+  if (bgImage) {
+    // draw the background image continuously
+    image(bgImage, bgX, 0,width, height);  // first
+    
+    // draw the second image when the first one move out
+    image(bgImage, bgX + width, 0, width, height);  // second
+    
+    // make images move
+    bgX -= 2;  // move to left
+    
+    // reset the background image when the 2nd move out
+    if (bgX <= -width) {
+      bgX = 0;
+    }
+    
+    // Check if score reaches 200
+    if (score >= 200) {
+      gameState = "success";  // Change to success state
+      image(successImage, 0, 0, width, height);
+    }
+
+
+/** calculate the score and check the collision ***/
+    checkCollision(); //call the function checkCollision
+    displayScore();  // call the fucntion displatyScore 
+}
+
+   
+/**** create the fireballs and set the speed，position and the amount ****/
+if (frameCount % 120 === 0) { 
+  // create a fireball every 120 frames (approximately every 2     seconds)
+  let y = random(300, 200);  // create it between 300-200
+  let speed = random(4, 5); // the speed 4-5 randomly
+  let fireBalls = createFireBalls(width, y, -speed); 
+   // flying to the left of canvas
+  fireBallsArray.push(fireBalls); 
+  // add fireBalls into fireBallsArray
+}
+
+    // Loop through the fireBallsArray and call move and create for each fireball
+  for (let i = 0; i < fireBallsArray.length; i++) {
+    let fireBall = fireBallsArray[i];
+    fireBall.move(); // Move fireball
+    fireBall.create(); // Create the fireball (draw it)
+ } 
+
+  // Jump paths are calculated based on t
+  if (isJumping) {
+    t += 0.015 ;  // control the speed of jumping
+
+    if (t > 1) {
+      t = 0;  // reset the jump
+      isJumping = false;  // end of jumping
+    }
+  }
+
+  // using bezier point to calculate the position
+  let x = bezierPoint(startX, controlX1, controlX2, endX, t);
+  let y = bezierPoint(startY, controlY1, controlY2, endY, t);
+
+  // call function drawCharacter
+  drawCharacter(x, y);
+   // check the collosion
+    checkCollision();
+ }
+  
+  else if (gameState === "gameOver") {
+    // appear the gameover image
+    image(gameOverImage, 0, 0, width, height);
+ } else if (gameState === "success"){
+    // appear the gasuccessImagemeSuccess image
+   image(successImage, 0, 0, width, height);
+}
+}
+  
+/*** player press space bar to jump and press R to reset the game ***/
+function keyPressed() {
+
+/**** Fluffy will jump and jump sound will be played when the player press the space bar***/ 
+  if (key == ' ') {
+  if (jumpSound.isPlaying()) {
+    // reset the jump sound if it is playing to avoid the conflict
+      jumpSound.stop(); // Stop the jump sound if it's already playing to avoid conflict
+    }
+
+       if (gameState === "start") {
+      gameState = "playing";  // start the game
+    }
+
+    MouX = 8;// change the mouse X
+    EyeX = 1;// change the eyes X
+    isJumping = true;  // jump
+  } 
+
+/** the game will be reset when the player pressed R **/
+  if (key === 'R' || key === 'r') {
+      gameState = "start";  // start the game
+      resetGame();  // Call reset function
+    }
+}
+
+/************* back to the origional size when spacebar is released ***********/
+function keyReleased() {
+  if (key === ' ') {
+    MouX = 1;
+    EyeX = 6;
+  }
+}
+
+
+
+/* create fireballs */
+function createFireBalls(x, y, speed) {
+return {
+  x: x, // x position
+  y: y, // y position
+  speed: speed, // speed of movement
+  size: 30, // size of the fireballs
+  isVisible: true, // visibility status
+
+/*** fireballs.move ***/
+    move: function () {
+      this.x += this.speed;// initialize the position
+  },
+
+/*** fireballs.create ***/
+    create : function () {
+    textSize (this.size);// the size of fireballs
+    text("🔥", this.x, this.y);// draw the fireballs
+   }
+ };
+}
+
+
+/** Function to display the score on the screen **/
+function displayScore() {
+    fill("white");  // the color if score
+    textSize(24);    // the size of score
+    text("Score: " + score, 20, 30);  // the position of score
+}
+
+
+
